@@ -90,6 +90,7 @@ class Node2Vec:
     #Name of the parameter containing the q value
     Q_KEY = 'q'
 
+    #Initialization of the Node2Vec class
     def __init__(self, graph, dimensions=128, walk_length=80, num_walks=10, p=1, q=1, weight_key='weight',
                  workers=1, sampling_strategy=None):
         """
@@ -113,13 +114,22 @@ class Node2Vec:
         :param sampling_strategy: Node specific sampling strategies, supports setting node specific 'q', 'p', 'num_walks' and 'walk_length'.
         Use these keys exactly. If not set, will use the global ones which were passed on the object initialization
         """
+        
+        #Contains the networkx graph
         self.graph = graph
+        #Parameter containing the embedding dimensions
         self.dimensions = dimensions
+        #Parameter containing the length of individual walks
         self.walk_length = walk_length
+        #Parameter containing the number of walks for each individual node
         self.num_walks = num_walks
+        #Parameter p
         self.p = p
+        #Parameter q
         self.q = q
+        #Parameter containing the weight attribute of network edges
         self.weight_key = weight_key
+        #Parameter containing the number of workers to work in parallel
         self.workers = workers
 
         if sampling_strategy is None:
@@ -127,28 +137,38 @@ class Node2Vec:
         else:
             self.sampling_strategy = sampling_strategy
 
+        #Computation of transition probabilities    
         self.d_graph = self._precompute_probabilities()
+        #Walk generation
         self.walks = self._generate_walks()
 
     def _precompute_probabilities(self):
         """
         Precomputes transition probabilities for each node.
         """
+        #this d_graph will contain all the information necessary for the walk generation
         d_graph = defaultdict(dict)
+        #Not sure about what this set is used for
         first_travel_done = set()
 
+        #loop over all nodes in the graph
+        #tqdm is progressbar package
         for source in tqdm(self.graph.nodes(), desc='Computing transition probabilities'):
 
             # Init probabilities dict for first travel
+            # self.PROBABILITIES_KEY is just a placeholder for the string 'probabilities'
+            # if there is no entry in the d_graph[source] dict, then add a new entry with key "probabilities" which is a dictionary itself
             if self.PROBABILITIES_KEY not in d_graph[source]:
                 d_graph[source][self.PROBABILITIES_KEY] = dict()
 
+            #Loop over all neighbors of the source node
             for current_node in self.graph.neighbors(source):
 
-                # Init probabilities dict
+                # This is basically the same step as the one introduced above for the source node
                 if self.PROBABILITIES_KEY not in d_graph[current_node]:
                     d_graph[current_node][self.PROBABILITIES_KEY] = dict()
 
+                #Initialization of lists
                 unnormalized_weights = list()
                 first_travel_weights = list()
                 d_neighbors = list()
