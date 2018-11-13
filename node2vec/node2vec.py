@@ -70,14 +70,24 @@ def parallel_generate_walks(d_graph, global_walk_length, num_walks, cpu_num, sam
     return walks
 
 
+#Main class
 class Node2Vec:
+    #Still no idea why this is needed
     FIRST_TRAVEL_KEY = 'first_travel_key'
+    #Still no idea why this is needed
     PROBABILITIES_KEY = 'probabilities'
+    #Still no idea why this is needed
     NEIGHBORS_KEY = 'neighbors'
+    
+    #Name for the data attribute containing the edge weights
     WEIGHT_KEY = 'weight'
+    #Name for the parameter containing the number of walks per node
     NUM_WALKS_KEY = 'num_walks'
+    #Name for the parameter containing the length of the walks
     WALK_LENGTH_KEY = 'walk_length'
+    #Name of the parameter containing the p value
     P_KEY = 'p'
+    #Name of the parameter containing the q value
     Q_KEY = 'q'
 
     def __init__(self, graph, dimensions=128, walk_length=80, num_walks=10, p=1, q=1, weight_key='weight',
