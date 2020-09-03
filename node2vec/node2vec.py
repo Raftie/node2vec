@@ -7,7 +7,7 @@ import gensim
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
-from .parallel import parallel_generate_walks
+from .parallel import parallel_generate_walks, get_first_travel, get_probabilities, get_neighbors
 
 
 #Main class
@@ -32,7 +32,7 @@ class Node2Vec:
 
     def __init__(self, graph: nx.Graph, dimensions: int = 128, walk_length: int = 80, num_walks: int = 10, p: float = 1,
                  q: float = 1, weight_key: str = 'weight', workers: int = 1, sampling_strategy: dict = None,
-                 quiet: bool = False, temp_folder: str = None):
+                 quiet: bool = False, temp_folder: str = None, experimental: bool = False):
         """
         Initiates the Node2Vec object, precomputes walking probabilities and generates the walks.
 
@@ -64,6 +64,7 @@ class Node2Vec:
         #Parameter containing the number of workers to work in parallel
         self.workers = workers
         self.quiet = quiet
+        self.experimental = experimental
         self.d_graph = defaultdict(dict)
 
         if sampling_strategy is None:
@@ -79,7 +80,11 @@ class Node2Vec:
             self.temp_folder = temp_folder
             self.require = "sharedmem"
 
-        self._precompute_probabilities()
+        if self.experimental:
+            self._precompute_probabilities_experimental()
+        else:
+            self._precompute_probabilities()
+
         self.walks = self._generate_walks()
 
     def _precompute_probabilities(self):
@@ -146,6 +151,29 @@ class Node2Vec:
 
             first_travel_weights = np.array(first_travel_weights)
             d_graph[source][self.FIRST_TRAVEL_KEY] = first_travel_weights / first_travel_weights.sum()
+
+    def _precompute_probabilities_experimental(self):
+
+        A = nx.adjacency_matrix(self.graph)
+
+
+        first_travels = Parallel(n_jobs=self.workers)(delayed(get_first_travel)(node, A, self.FIRST_TRAVEL_KEY, self.p, self.q) for node in tqdm(self.graph.nodes()))
+        probs = Parallel(n_jobs=self.workers)(delayed(get_probabilities)(node, A, self.PROBABILITIES_KEY, self.p, self.q) for node in tqdm(self.graph.nodes()))
+        neighbors = Parallel(n_jobs=self.workers)(delayed(get_neighbors)(node, A,) for node in tqdm(self.graph.nodes()))
+        
+        print("finished probs")
+        d_graph = self.d_graph
+        
+        prob_dict = dict(probs)
+        first_travel_dict = dict(first_travels)
+        neighbor_dict = dict(neighbors)
+        self.neighbor_dict = neighbor_dict
+        d_graph.update(first_travel_dict)
+        for k,v in d_graph.items():
+            v.update(prob_dict[k])
+            v.update(neighbor_dict[k])
+
+        print("finished precompute")
 
     def _generate_walks(self) -> list:
         """

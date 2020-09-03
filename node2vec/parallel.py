@@ -1,6 +1,8 @@
 import random
 import numpy as np
 from tqdm import tqdm
+from collections import defaultdict
+from scipy.sparse import identity
 
 
 def parallel_generate_walks(d_graph: dict, global_walk_length: int, num_walks: int, cpu_num: int,
@@ -72,3 +74,33 @@ def parallel_generate_walks(d_graph: dict, global_walk_length: int, num_walks: i
         pbar.close()
 
     return walks
+
+
+def get_probabilities(current_node, A, probabilities_key: str = None, p: float = 1, q: float = 1):
+
+    results = []
+
+
+    for source in A[current_node, :].nonzero()[1]:
+
+        
+        id_mat = identity(A.shape[0]).tocsr()
+        unnormalized_weights  = (A[current_node, :] + ((1/p)-1)*(A[current_node, :].multiply(A[source, :])) + ((1/q)-1)*(id_mat[source, :])).data
+        normalized_weights = unnormalized_weights / unnormalized_weights.sum()
+        results.append((source, normalized_weights))
+
+
+    pd = (current_node, {probabilities_key: dict(results)})    
+    return pd
+
+def get_first_travel(node, A, first_travel_key: str = None, p: float = 1, q: float = 1):
+    ftd = (node, {first_travel_key: (A[node, :] / np.sum(A[node, :])).data})
+    
+    #ftd[node][first_travel_key] = (A[node, :] / np.sum(A[node, :])).data
+    return ftd
+
+def get_neighbors(node, A):
+
+    neighbors = {"neighbors": list(A[node, :].nonzero()[1])}
+
+    return (node, neighbors)
