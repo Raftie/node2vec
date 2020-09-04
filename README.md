@@ -1,3 +1,8 @@
+# Node2Vec with Parallelized Precomputation of Probabilities
+
+This is a copy of Eliorc Node2Vec. The code has been changed to support multiprocessed probability computations.
+Goal is to speed up the steps before word2vec starts running. 
+
 # Node2Vec
 [![Downloads](http://pepy.tech/badge/node2vec)](http://pepy.tech/project/node2vec)
 
