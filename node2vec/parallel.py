@@ -76,31 +76,35 @@ def parallel_generate_walks(d_graph: dict, global_walk_length: int, num_walks: i
     return walks
 
 
-def get_probabilities(current_node, A, probabilities_key: str = None, p: float = 1, q: float = 1):
+def get_probabilities(current_node, A, node_labels_to_int, probabilities_key: str = None, p: float = 1, q: float = 1):
 
     results = []
-
-
-    for source in A[current_node, :].nonzero()[1]:
+    current_node_pos = node_labels_to_int[current_node]
+    int_to_node_labels = {v:k for k,v in node_labels_to_int.items()}
+    for source_pos in A[current_node_pos, :].nonzero()[1]:
 
         
         id_mat = identity(A.shape[0]).tocsr()
-        unnormalized_weights  = (A[current_node, :] + ((1/p)-1)*(A[current_node, :].multiply(A[source, :])) + ((1/q)-1)*(id_mat[source, :])).data
+        unnormalized_weights  = (A[current_node_pos, :] + ((1/p)-1)*(A[current_node_pos, :].multiply(A[source_pos, :])) + ((1/q)-1)*(id_mat[source_pos, :])).data
         normalized_weights = unnormalized_weights / unnormalized_weights.sum()
+        source = int_to_node_labels[source_pos]
         results.append((source, normalized_weights))
 
 
     pd = (current_node, {probabilities_key: dict(results)})    
     return pd
 
-def get_first_travel(node, A, first_travel_key: str = None, p: float = 1, q: float = 1):
-    ftd = (node, {first_travel_key: (A[node, :] / np.sum(A[node, :])).data})
+def get_first_travel(node, A, node_labels_to_int, first_travel_key: str = None, p: float = 1, q: float = 1):
+    node_pos = node_labels_to_int[node]
+    
+    ftd = (node, {first_travel_key: (A[node_pos, :] / np.sum(A[node_pos, :])).data})
     
     #ftd[node][first_travel_key] = (A[node, :] / np.sum(A[node, :])).data
     return ftd
 
-def get_neighbors(node, A):
+def get_neighbors(node, A, node_labels_to_int):
 
-    neighbors = {"neighbors": list(A[node, :].nonzero()[1])}
+    node_pos = node_labels_to_int[node]
+    neighbors = {"neighbors": list(A[node_pos, :].nonzero()[1])}
 
     return (node, neighbors)

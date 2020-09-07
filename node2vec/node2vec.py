@@ -154,12 +154,12 @@ class Node2Vec:
 
     def _precompute_probabilities_experimental(self):
 
-        A = nx.adjacency_matrix(self.graph)
+        A = nx.adjacency_matrix(self.graph, nodelist=self.graph.nodes())
+        node_labels_to_int = dict(zip(self.graph.nodes(), range(self.graph.number_of_nodes())))
 
-
-        first_travels = Parallel(n_jobs=self.workers)(delayed(get_first_travel)(node, A, self.FIRST_TRAVEL_KEY, self.p, self.q) for node in tqdm(self.graph.nodes()))
-        probs = Parallel(n_jobs=self.workers)(delayed(get_probabilities)(node, A, self.PROBABILITIES_KEY, self.p, self.q) for node in tqdm(self.graph.nodes()))
-        neighbors = Parallel(n_jobs=self.workers)(delayed(get_neighbors)(node, A,) for node in tqdm(self.graph.nodes()))
+        first_travels = Parallel(n_jobs=self.workers)(delayed(get_first_travel)(node, A, node_labels_to_int, self.FIRST_TRAVEL_KEY, self.p, self.q) for node in tqdm(self.graph.nodes()))
+        probs = Parallel(n_jobs=self.workers)(delayed(get_probabilities)(node, A, node_labels_to_int, self.PROBABILITIES_KEY, self.p, self.q) for node in tqdm(self.graph.nodes()))
+        neighbors = Parallel(n_jobs=self.workers)(delayed(get_neighbors)(node, A, node_labels_to_int) for node in tqdm(self.graph.nodes()))
         
         print("finished probs")
         d_graph = self.d_graph
