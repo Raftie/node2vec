@@ -6,7 +6,7 @@ EMBEDDING_FILENAME = './embeddings.emb'
 EMBEDDING_MODEL_FILENAME = './embeddings.model'
 
 # Create a graph
-graph = nx.fast_gnp_random_graph(n=100, p=0.5)
+graph = nx.fast_gnp_random_graph(n=1000, p=0.5)
 
 # Precompute probabilities and generate walks
 n2v1 = Node2Vec(graph, dimensions=64, walk_length=30, num_walks=200, workers=4, experimental=False)
