@@ -106,7 +106,9 @@ def get_first_travel(node, A, node_labels_to_int, first_travel_key: str = None, 
 def get_neighbors(node, A, node_labels_to_int):
 
     node_pos = node_labels_to_int[node]
-    neighbors = {"neighbors": list(A[node_pos, :].nonzero()[1])}
+    int_to_node_labels = {v:k for k,v in node_labels_to_int.items()}
+    neighbor_positions = list(A[node_pos, :].nonzero()[1])                     
+    neighbors = {"neighbors": [int_to_node_labels[neighbor_pos] for neighbor_pos in neighbor_positions]}
 
     return (node, neighbors)
 
