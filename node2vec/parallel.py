@@ -112,7 +112,7 @@ def get_neighbors(node, A, node_labels_to_int):
 
 def get_probabilities_chunked(chunk, chunkid, output_folder, *args):
     probs = []
-    for node in chunk:
+    for node in tqdm(chunk, total = len(chunk)):
         r = get_probabilities(node, *args)
         probs.append(r)
     
@@ -122,10 +122,20 @@ def get_probabilities_chunked(chunk, chunkid, output_folder, *args):
 
 def get_first_travel_chunked(chunk, chunkid, output_folder, *args):
     first_travel = []
-    for node in chunk:
+    for node in tqdm(chunk, total=len(chunk)):
         r = get_first_travel(node, *args)
         first_travel.append(r)
     
     filename = "".join([str(chunkid), '.pkl'])
     filename = os.path.join(output_folder, filename)
     pickle.dump(first_travel, open( filename, "wb" ) )
+
+def get_neighbors_chunked(chunk, chunkid, output_folder, *args):
+    neighbors = []
+    for node in tqdm(chunk, total=len(chunk)):
+        r = get_neighbors(node, *args)
+        neighbors.append(r)
+    
+    filename = "".join([str(chunkid), '.pkl'])
+    filename = os.path.join(output_folder, filename)
+    pickle.dump(neighbors, open( filename, "wb" ) )
