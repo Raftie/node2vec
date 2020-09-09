@@ -119,3 +119,13 @@ def get_probabilities_chunked(chunk, chunkid, output_folder, *args):
     filename = "".join([str(chunkid), '.pkl'])
     filename = os.path.join(output_folder, filename)
     pickle.dump(probs, open( filename, "wb" ) )
+
+def get_first_travel_chunked(chunk, chunkid, output_folder, *args):
+    first_travel = []
+    for node in chunk:
+        r = get_first_travel(node, *args)
+        first_travel.append(r)
+    
+    filename = "".join([str(chunkid), '.pkl'])
+    filename = os.path.join(output_folder, filename)
+    pickle.dump(first_travel, open( filename, "wb" ) )

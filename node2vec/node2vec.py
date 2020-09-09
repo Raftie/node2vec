@@ -8,7 +8,7 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 import glob 
 import pickle
-from .parallel import parallel_generate_walks, get_first_travel, get_probabilities, get_neighbors, get_probabilities_chunked
+from .parallel import parallel_generate_walks, get_first_travel, get_probabilities, get_neighbors, get_probabilities_chunked, get_first_travel_chunked
 
 
 #Main class
@@ -168,6 +168,17 @@ class Node2Vec:
                 r = pickle.load( open( f, "rb" ) )
                 probs += r    
                 os.remove(f) 
+
+            first_travels = []
+            chunk_generator = (list(self.graph)[i:i+self.chunksize] for i in range(0,len(list(self.graph)),self.chunksize))
+            Parallel(n_jobs=self.workers)(delayed(get_first_travel_chunked)(chunk, chunkid, self.temp_folder, A, node_labels_to_int, self.FIRST_TRAVEL_KEY, self.p, self.q) for chunkid, chunk in tqdm(enumerate(chunk_generator)))
+            files = glob.glob(os.path.join(self.temp_folder, '*.pkl'))
+            for f in files:
+                r = pickle.load( open( f, "rb" ) )
+                first_travels += r    
+                os.remove(f) 
+
+
         else:
             probs = Parallel(n_jobs=self.workers)(delayed(get_probabilities)(node, A, node_labels_to_int, self.PROBABILITIES_KEY, self.p, self.q) for node in tqdm(self.graph.nodes()))
         
