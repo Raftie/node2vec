@@ -3,6 +3,9 @@
 This is a copy of Eliorc Node2Vec. The code has been changed to support multiprocessed probability computations.
 Goal is to speed up the steps before word2vec starts running. 
 
+Change 9/9 
+Chunked precompuation of probabilities is possible. Needs to write some files to temp folder. 
+
 # Node2Vec
 [![Downloads](http://pepy.tech/badge/node2vec)](http://pepy.tech/project/node2vec)
 
