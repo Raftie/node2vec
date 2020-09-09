@@ -3,7 +3,8 @@ import numpy as np
 from tqdm import tqdm
 from collections import defaultdict
 from scipy.sparse import identity
-
+import os
+import pickle
 
 def parallel_generate_walks(d_graph: dict, global_walk_length: int, num_walks: int, cpu_num: int,
                             sampling_strategy: dict = None, num_walks_key: str = None, walk_length_key: str = None,
@@ -108,3 +109,13 @@ def get_neighbors(node, A, node_labels_to_int):
     neighbors = {"neighbors": list(A[node_pos, :].nonzero()[1])}
 
     return (node, neighbors)
+
+def get_probabilities_chunked(chunk, chunkid, output_folder, *args):
+    probs = []
+    for node in chunk:
+        r = get_probabilities(node, *args)
+        probs.append(r)
+    
+    filename = "".join([str(chunkid), '.pkl'])
+    filename = os.path.join(output_folder, filename)
+    pickle.dump(probs, open( filename, "wb" ) )

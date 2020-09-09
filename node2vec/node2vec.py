@@ -6,8 +6,9 @@ import networkx as nx
 import gensim
 from joblib import Parallel, delayed
 from tqdm import tqdm
-
-from .parallel import parallel_generate_walks, get_first_travel, get_probabilities, get_neighbors
+import glob 
+import pickle
+from .parallel import parallel_generate_walks, get_first_travel, get_probabilities, get_neighbors, get_probabilities_chunked
 
 
 #Main class
@@ -32,7 +33,7 @@ class Node2Vec:
 
     def __init__(self, graph: nx.Graph, dimensions: int = 128, walk_length: int = 80, num_walks: int = 10, p: float = 1,
                  q: float = 1, weight_key: str = 'weight', workers: int = 1, sampling_strategy: dict = None,
-                 quiet: bool = False, temp_folder: str = None, experimental: bool = False):
+                 quiet: bool = False, temp_folder: str = None, experimental: bool = False, chunksize: int = 0):
         """
         Initiates the Node2Vec object, precomputes walking probabilities and generates the walks.
 
@@ -66,6 +67,7 @@ class Node2Vec:
         self.quiet = quiet
         self.experimental = experimental
         self.d_graph = defaultdict(dict)
+        self.chunksize = chunksize
 
         if sampling_strategy is None:
             self.sampling_strategy = {}
@@ -157,14 +159,27 @@ class Node2Vec:
         A = nx.adjacency_matrix(self.graph, nodelist=self.graph.nodes())
         node_labels_to_int = dict(zip(self.graph.nodes(), range(self.graph.number_of_nodes())))
 
+        if self.chunksize:
+            probs = []
+            chunk_generator = (list(self.graph)[i:i+self.chunksize] for i in range(0,len(list(self.graph)),self.chunksize))
+            Parallel(n_jobs=self.workers)(delayed(get_probabilities_chunked)(chunk, chunkid, self.temp_folder, A, node_labels_to_int, self.PROBABILITIES_KEY, self.p, self.q) for chunkid, chunk in tqdm(enumerate(chunk_generator)))
+            files = glob.glob(os.path.join(self.temp_folder, '*.pkl'))
+            for f in files:
+                r = pickle.load( open( f, "rb" ) )
+                probs += r    
+                os.remove(f) 
+        else:
+            probs = Parallel(n_jobs=self.workers)(delayed(get_probabilities)(node, A, node_labels_to_int, self.PROBABILITIES_KEY, self.p, self.q) for node in tqdm(self.graph.nodes()))
+        
         first_travels = Parallel(n_jobs=self.workers)(delayed(get_first_travel)(node, A, node_labels_to_int, self.FIRST_TRAVEL_KEY, self.p, self.q) for node in tqdm(self.graph.nodes()))
-        probs = Parallel(n_jobs=self.workers)(delayed(get_probabilities)(node, A, node_labels_to_int, self.PROBABILITIES_KEY, self.p, self.q) for node in tqdm(self.graph.nodes()))
+        
         neighbors = Parallel(n_jobs=self.workers)(delayed(get_neighbors)(node, A, node_labels_to_int) for node in tqdm(self.graph.nodes()))
         
         print("finished probs")
+
         d_graph = self.d_graph
-        
         prob_dict = dict(probs)
+
         first_travel_dict = dict(first_travels)
         neighbor_dict = dict(neighbors)
         self.neighbor_dict = neighbor_dict
