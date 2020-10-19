@@ -164,7 +164,7 @@ class Node2Vec:
         if self.chunksize:
             probs = []
             chunk_generator = (list(self.graph)[i:i+self.chunksize] for i in range(0,len(list(self.graph)),self.chunksize))
-            Parallel(n_jobs=self.workers)(delayed(get_probabilities_chunked)(chunk, chunkid, self.temp_folder, A, node_labels_to_int, self.PROBABILITIES_KEY, self.p, self.q) for chunkid, chunk in tqdm(enumerate(chunk_generator)))
+            Parallel(n_jobs=self.workers, backend='multiprocessing')(delayed(get_probabilities_chunked)(chunk, chunkid, self.temp_folder, A, node_labels_to_int, self.PROBABILITIES_KEY, self.p, self.q) for chunkid, chunk in tqdm(enumerate(chunk_generator), total=int(A.shape[0]/self.chunksize)))
             files = glob.glob(os.path.join(self.temp_folder, '*.pkl'))
             for f in files:
                 r = pickle.load( open( f, "rb" ) )
