@@ -112,32 +112,54 @@ def get_neighbors(node, A, node_labels_to_int):
 
     return (node, neighbors)
 
-def get_probabilities_chunked(chunk, chunkid, output_folder, *args):
+def get_probabilities_chunked(chunk, chunkid, output_folder, *args, quiet=True):
+
+    if not quiet:
+        pbar = tqdm(total=len(chunk), desc='Generating probabilities (chunk: {})'.format(chunkid), position=chunkid)
+
     probs = []
-    for node in tqdm(chunk, total = len(chunk)):
+    for node in chunk:
         r = get_probabilities(node, *args)
         probs.append(r)
+        if not quiet:
+            pbar.update(1)
     
     filename = "".join([str(chunkid), '.pkl'])
     filename = os.path.join(output_folder, filename)
     pickle.dump(probs, open( filename, "wb" ) )
 
+    if not quiet:
+        pbar.close()
+
 def get_first_travel_chunked(chunk, chunkid, output_folder, *args):
+    
+    pbar = tqdm(total=len(chunk), desc='Generating first travel probabilities (chunk: {})'.format(chunkid), position=chunkid)
+    
     first_travel = []
-    for node in tqdm(chunk, total=len(chunk)):
+    for node in chunk:
         r = get_first_travel(node, *args)
         first_travel.append(r)
+        pbar.update(1)
     
     filename = "".join([str(chunkid), '.pkl'])
     filename = os.path.join(output_folder, filename)
     pickle.dump(first_travel, open( filename, "wb" ) )
 
+    pbar.close()
+
 def get_neighbors_chunked(chunk, chunkid, output_folder, *args):
+
+    pbar = tqdm(total=len(chunk), desc='Generating neighbours (chunk: {})'.format(chunkid), position=chunkid)
+
     neighbors = []
-    for node in tqdm(chunk, total=len(chunk)):
+    for node in chunk:
         r = get_neighbors(node, *args)
         neighbors.append(r)
+
+        pbar.update(1)
     
     filename = "".join([str(chunkid), '.pkl'])
     filename = os.path.join(output_folder, filename)
     pickle.dump(neighbors, open( filename, "wb" ) )
+
+    pbar.close()
