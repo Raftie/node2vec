@@ -164,7 +164,7 @@ class Node2Vec:
         if self.chunksize:
             probs = []
             chunk_generator = (list(self.graph)[i:i+self.chunksize] for i in range(0,len(list(self.graph)),self.chunksize))
-            Parallel(n_jobs=self.workers, backend='multiprocessing')(delayed(get_probabilities_chunked)(chunk, chunkid, self.temp_folder, A, node_labels_to_int, self.PROBABILITIES_KEY, self.p, self.q, quiet = self.quiet) for chunkid, chunk in tqdm(enumerate(chunk_generator), total=len(list(self.graph))/self.chunksize))
+            Parallel(n_jobs=self.workers, backend='multiprocessing')(delayed(get_probabilities_chunked)(chunk, chunkid, self.temp_folder, A, node_labels_to_int, self.PROBABILITIES_KEY, self.p, self.q, quiet = True) for chunkid, chunk in tqdm(enumerate(chunk_generator), total=len(list(self.graph))/self.chunksize))
             files = glob.glob(os.path.join(self.temp_folder, '*.pkl'))
             for f in files:
                 r = pickle.load( open( f, "rb" ) )
@@ -231,7 +231,7 @@ class Node2Vec:
         # Split num_walks for each worker
         num_walks_lists = np.array_split(range(self.num_walks), self.workers)
 
-        walk_results = Parallel(n_jobs=self.workers, temp_folder=self.temp_folder, require=self.require, backend=multiprocessing)(
+        walk_results = Parallel(n_jobs=self.workers, temp_folder=self.temp_folder, require=self.require, backend='multiprocessing')(
             delayed(parallel_generate_walks)(self.d_graph,
                                              self.walk_length,
                                              len(num_walks),
