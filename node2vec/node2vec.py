@@ -174,7 +174,7 @@ class Node2Vec:
 
             first_travels = []
             chunk_generator = (list(self.graph)[i:i+self.chunksize] for i in range(0,len(list(self.graph)),self.chunksize))
-            Parallel(n_jobs=self.workers)(delayed(get_first_travel_chunked)(chunk, chunkid, self.temp_folder, A, node_labels_to_int, self.FIRST_TRAVEL_KEY, self.p, self.q) for chunkid, chunk in enumerate(chunk_generator))
+            Parallel(n_jobs=self.workers)(delayed(get_first_travel_chunked)(chunk, chunkid, self.temp_folder, A, node_labels_to_int, self.FIRST_TRAVEL_KEY, self.p, self.q) for chunkid, chunk in tqdm(enumerate(chunk_generator), total=int(len(list(self.graph))/self.chunksize)))
             files = glob.glob(os.path.join(self.temp_folder, '*.pkl'))
             for f in files:
                 r = pickle.load( open( f, "rb" ) )
@@ -185,7 +185,7 @@ class Node2Vec:
 
             neighbors = []
             chunk_generator = (list(self.graph)[i:i+self.chunksize] for i in range(0,len(list(self.graph)),self.chunksize))
-            Parallel(n_jobs=self.workers)(delayed(get_neighbors_chunked)(chunk, chunkid, self.temp_folder, A, node_labels_to_int) for chunkid, chunk in enumerate(chunk_generator))
+            Parallel(n_jobs=self.workers)(delayed(get_neighbors_chunked)(chunk, chunkid, self.temp_folder, A, node_labels_to_int) for chunkid, chunk in tqdm(enumerate(chunk_generator), total=int(len(list(self.graph))/self.chunksize)))
             files = glob.glob(os.path.join(self.temp_folder, '*.pkl'))
             for f in files:
                 r = pickle.load( open( f, "rb" ) )
