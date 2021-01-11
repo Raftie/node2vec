@@ -231,7 +231,7 @@ class Node2Vec:
         # Split num_walks for each worker
         num_walks_lists = np.array_split(range(self.num_walks), self.workers)
 
-        walk_results = Parallel(n_jobs=self.workers, temp_folder=self.temp_folder, require=self.require, backend='multiprocessing')(
+        walk_results = Parallel(n_jobs=self.workers, temp_folder=self.temp_folder, require=self.require)(
             delayed(parallel_generate_walks)(self.d_graph,
                                              self.walk_length,
                                              len(num_walks),
